@@ -51,11 +51,11 @@ export async function submitAudit(
     return { success: false, error: "Invalid team size." };
   }
 
-  try {
-    const recommendations = runAudit(formData);
-    const { totalMonthlySavings, totalAnnualSavings } = calcTotals(recommendations);
-    const aiSummary = await generateAISummary(formData, recommendations, totalMonthlySavings);
+  const recommendations = runAudit(formData);
+  const { totalMonthlySavings, totalAnnualSavings } = calcTotals(recommendations);
+  const aiSummary = await generateAISummary(formData, recommendations, totalMonthlySavings);
 
+  try {
     const auditId = uuidv4();
     const db = getServiceSupabase();
 
@@ -71,13 +71,23 @@ export async function submitAudit(
 
     if (error) {
       console.error("Supabase insert error:", error);
-      return { success: false, error: "Failed to save audit." };
+      return {
+        success: false,
+        error: `Failed to save audit: ${error.message}`,
+      };
     }
 
     return { success: true, auditId };
   } catch (err) {
     console.error("Audit submission error:", err);
-    return { success: false, error: "Something went wrong. Please try again." };
+    if (err instanceof Error && err.message.includes("Supabase")) {
+      return {
+        success: false,
+        error: "Server is missing Supabase environment variables.",
+      };
+    }
+
+    return { success: false, error: "Failed to save audit. Please try again." };
   }
 }
 
@@ -163,14 +173,3 @@ async function sendConfirmationEmail(email: string): Promise<void> {
 }
 
 // ─── Fetch audit by ID (for results + public share pages) ────────────────────
-export async function getAudit(id: string) {
-  const db = getServiceSupabase();
-  const { data, error } = await db
-    .from("audits")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error || !data) return null;
-  return data;
-}
