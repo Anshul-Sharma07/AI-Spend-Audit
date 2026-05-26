@@ -1,5 +1,6 @@
 // app/audit/[id]/page.tsx
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { getAudit } from "@/lib/actions";
