@@ -1,37 +1,15 @@
-// app/audit/[id]/page.tsx
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 import { notFound } from "next/navigation";
-import { Metadata } from "next";
-import { getAudit } from "@/lib/actions";
+import { getAudit } from "@/lib/audits";
 import ResultsView from "@/components/ResultsView";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
 import { Recommendation } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
 interface Props {
   params: Promise<{ id: string }>;
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
-  const audit = await getAudit(id);
-  if (!audit) return { title: "Audit not found" };
-
-  const savings = audit.total_monthly_savings;
-  const title =
-    savings > 0
-      ? `AI Spend Audit — $${savings.toLocaleString()}/mo in savings found`
-      : "AI Spend Audit — Results";
-
-  return {
-    title,
-    description: audit.ai_summary?.slice(0, 160) ?? "View your personalized AI spend audit results.",
-    openGraph: {
-      title,
-      description: audit.ai_summary?.slice(0, 160) ?? "",
-      type: "website",
-    },
-  };
 }
 
 export default async function AuditResultsPage({ params }: Props) {
