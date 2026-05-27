@@ -171,5 +171,3 @@ async function sendConfirmationEmail(email: string): Promise<void> {
     console.error("Resend email failed — non-blocking");
   }
 }
-
-// ─── Fetch audit by ID (for results + public share pages) ────────────────────

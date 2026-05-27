@@ -32,7 +32,7 @@ create unique index if not exists leads_email_audit_unique on leads (email, audi
 create index if not exists leads_email_idx on leads (email);
 
 -- ─── Row Level Security ───────────────────────────────────────────────────────
--- Audits are publicly readable (for share pages) but only insertable via service role
+-- Audits are publicly readable for result URLs but only insertable via service role
 alter table audits enable row level security;
 
 create policy "Audits are publicly readable"

@@ -18,7 +18,6 @@ interface Props {
   aiSummary: string;
   formData: { teamSize: number; primaryUseCase: string };
   shareUrl: string;
-  auditId: string;
 }
 
 export default function ResultsView({
@@ -27,15 +26,12 @@ export default function ResultsView({
   totalAnnualSavings,
   aiSummary,
   shareUrl,
-  auditId,
 }: Props) {
   const [copied, setCopied] = useState(false);
 
-  const publicShareUrl = shareUrl.replace(`/audit/${auditId}`, `/audit/${auditId}/share`);
-
   async function copyShareLink() {
     try {
-      await navigator.clipboard.writeText(publicShareUrl);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

@@ -1,142 +1,165 @@
-# AI Spend Audit — Credex
+# AI Spend Audit
 
-A free SaaS-style tool that helps startups identify and reduce overspending on AI tools (Cursor, ChatGPT, Claude, GitHub Copilot, etc.).
+AI Spend Audit is a startup-style SaaS MVP that helps small teams find wasted spend across AI tools such as Cursor, GitHub Copilot, ChatGPT, Claude, OpenAI API, Anthropic API, Gemini, and Windsurf.
+
+The product asks for a team's AI stack, runs a deterministic savings audit, saves the report in Supabase, generates an optional AI-written summary, and captures qualified leads for follow-up.
+
+Production: `https://spendaudit.credex.ai`
+
+## What It Does
+
+- Audits AI subscriptions by tool, plan, monthly spend, and seat count.
+- Flags plan mismatches, unused seat risk, high API spend, and overlapping tools.
+- Calculates monthly and annual savings with deterministic rules.
+- Generates a concise AI summary with a deterministic fallback if the AI API is unavailable.
+- Saves reports to Supabase and provides a shareable result URL.
+- Captures work emails for follow-up when users want help implementing savings.
+
+## Screenshots
+
+Add final submission screenshots here:
+
+| Screen | Suggested Capture |
+| --- | --- |
+| Landing page | Hero, CTA, supported tools |
+| Audit form | Team context and AI tool input |
+| Results page | Savings summary and recommendations |
+| Lead capture | Email capture state after an audit |
+| Mobile view | Audit form or results page on a narrow viewport |
+
+Recommended filenames:
+
+```text
+docs/screenshots/landing.png
+docs/screenshots/audit-form.png
+docs/screenshots/results.png
+docs/screenshots/mobile.png
+```
 
 ## Tech Stack
 
-- **Next.js 15** App Router + Server Actions
-- **TypeScript** — strict mode
-- **Tailwind CSS** + shadcn/ui
-- **Supabase** — PostgreSQL (audits + leads)
-- **Anthropic API** — AI summary generation (with deterministic fallback)
-- **Resend** — confirmation emails
-- **Vitest** — unit tests
-- **GitHub Actions** — CI (lint → test → build)
+- Next.js App Router with Server Actions
+- TypeScript
+- Tailwind CSS and lightweight shadcn-style primitives
+- Supabase Postgres for audits and leads
+- Anthropic API for narrative summaries
+- Resend for optional confirmation email
+- Vitest for audit-engine unit tests
+- Vercel for deployment
 
-## Features
-
-- 🔍 **Audit form** — Add tools with plan, spend, and seat count; persisted to localStorage
-- 🧮 **Deterministic audit engine** — Rule-based savings analysis (no AI for calculations)
-- 📊 **Results page** — Per-tool recommendations with monthly/annual savings
-- 🤖 **AI summary** — Personalized paragraph via Claude API with fallback
-- 🔗 **Shareable public URL** — `/audit/[id]/share` (excludes email/company)
-- 📧 **Lead capture** — Email + optional company/role, stored in Supabase + Resend email
-- 🛡️ **Abuse protection** — Honeypot fields + in-memory rate limiting
-
-## Quick Start
-
-### 1. Clone and install
+## Local Setup
 
 ```bash
-git clone https://github.com/your-org/ai-spend-audit
-cd ai-spend-audit
 npm install
-```
-
-### 2. Configure environment
-
-```bash
-cp .env.local.example .env.local
-# Fill in your Supabase, Anthropic, and Resend keys
-```
-
-### 3. Set up Supabase
-
-1. Create a project at [supabase.com](https://supabase.com)
-2. Run the SQL from `supabase/schema.sql` in the SQL Editor
-3. Copy your project URL and keys into `.env.local`
-
-> **Important:** The `audits` and `leads` tables use service-role-only insert policies.
-> All writes go through server actions using `SUPABASE_SERVICE_ROLE_KEY`.
-> The anon key is only used for the client-side Supabase instance (reads on public audits).
-
-### 4. Run locally
-
-```bash
+cp .env.example .env.local
 npm run dev
-# Open http://localhost:3000
 ```
 
-### 5. Run tests
+Open `http://localhost:3000`.
+
+## Environment Variables
+
+```text
+NEXT_PUBLIC_SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+ANTHROPIC_API_KEY=
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=
+NEXT_PUBLIC_APP_URL=
+```
+
+Notes:
+
+- `SUPABASE_SERVICE_ROLE_KEY` must stay server-side only.
+- `ANTHROPIC_API_KEY` is optional for local testing because the app has a deterministic fallback summary.
+- `RESEND_API_KEY` is optional for core audit flow; lead capture still saves without email delivery if Resend is absent.
+
+## Database Setup
+
+1. Create a Supabase project.
+2. Open the Supabase SQL editor.
+3. Run [supabase/schema.sql](supabase/schema.sql).
+4. Add the environment variables above to `.env.local` and Vercel.
+
+## Commands
+
+```bash
+npm run dev      # local development
+npm run build    # production build
+npm run lint     # ESLint
+npm test         # Vitest audit-engine tests
+```
+
+## Architecture Overview
+
+The app intentionally keeps the savings logic deterministic. AI is used only for summarizing the result, not for calculating savings.
+
+```text
+User -> Audit Form -> Server Action -> Rule Engine -> Supabase
+                                      -> AI Summary with fallback
+                                      -> Results Page
+Results Page -> Lead Capture -> Server Action -> Supabase -> Optional Resend Email
+```
+
+More detail: [ARCHITECTURE.md](ARCHITECTURE.md)
+
+## Key Decisions and Tradeoffs
+
+- Deterministic audit rules over AI-only analysis: easier to test, explain, and trust.
+- Server Actions over a separate API layer: faster MVP delivery with less boilerplate.
+- Supabase service role on the server only: simple secure writes for a prototype.
+- AI summary is non-critical: if Anthropic fails, users still receive a complete report.
+- Shareable result URLs are simple public report links for the MVP. Auth can be added later if reports become sensitive.
+- In-memory rate limiting is acceptable for MVP abuse reduction, but would move to Redis or Upstash at scale.
+
+## Tests
+
+The current test suite focuses on the highest-risk logic: savings recommendations.
 
 ```bash
 npm test
 ```
 
-## Environment Variables
+Current coverage:
 
-| Variable | Required | Description |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase anon/public key |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase service role key (server only) |
-| `ANTHROPIC_API_KEY` | ✅ | Anthropic API key for AI summary |
-| `RESEND_API_KEY` | ✅ | Resend API key for confirmation emails |
-| `RESEND_FROM_EMAIL` | Optional | Sender address (default: `audit@credex.ai`) |
-| `NEXT_PUBLIC_APP_URL` | ✅ | Full app URL (e.g. `https://spendaudit.credex.ai`) |
+- Cursor plan right-sizing
+- ChatGPT plan right-sizing
+- GitHub Copilot plan right-sizing
+- API spend thresholds
+- Tool overlap detection
+- Savings total calculation
 
-## Project Structure
+More detail: [TESTS.md](TESTS.md)
 
-```
-app/
-  page.tsx                    # Landing page
-  layout.tsx                  # Root layout (fonts, metadata)
-  globals.css                 # Design tokens + Tailwind
-  not-found.tsx               # 404 page
-  audit/
-    layout.tsx                # Audit section nav
-    page.tsx                  # Audit form page
-    [id]/
-      page.tsx                # Results page (private — shows lead form)
-      share/
-        page.tsx              # Public share page (no personal data, OG tags)
+## Submission Docs
 
-components/
-  AuditForm.tsx               # Main form with localStorage persistence
-  ResultsView.tsx             # Results display + share/CTA
-  RecommendationCard.tsx      # Per-tool finding card
-  SavingsSummary.tsx          # Big numbers summary card
-  LeadCaptureForm.tsx         # Email capture form
-  ui/                         # shadcn/ui primitives
+- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [REFLECTION.md](REFLECTION.md)
+- [GTM.md](GTM.md)
+- [ECONOMICS.md](ECONOMICS.md)
+- [METRICS.md](METRICS.md)
+- [TESTS.md](TESTS.md)
+- [SUBMISSION_REVIEW.md](SUBMISSION_REVIEW.md)
 
-lib/
-  types.ts                    # Shared TypeScript types
-  pricing.ts                  # Centralized tool pricing config
-  audit-engine.ts             # Deterministic rule-based audit logic
-  ai-summary.ts               # AI summary + deterministic fallback
-  actions.ts                  # Server actions (submitAudit, captureLead, getAudit)
-  supabase.ts                 # Supabase client setup
-  utils.ts                    # cn(), formatCurrency()
+## Deployment
 
-__tests__/
-  audit-engine.test.ts        # 15 unit tests for audit logic
+The project deploys on Vercel.
 
-supabase/
-  schema.sql                  # Database schema + RLS policies
-
-.github/workflows/
-  ci.yml                      # Lint → Test → Build pipeline
-```
-
-## Audit Engine
-
-The audit engine (`lib/audit-engine.ts`) is fully deterministic — no AI involved in savings calculations. Rules include:
-
-- **Cursor Business ≤2 seats** → recommend Pro ($20/seat saves 50%)
-- **ChatGPT Team for tiny teams** → recommend Plus individual plans
-- **GitHub Copilot Enterprise for small teams** → recommend Business
-- **High API spend per-person** → flag with caching/model recommendations
-- **Tool overlap** (Cursor + Copilot + Windsurf) → consolidation warning
-- **ChatGPT + OpenAI API** → redundancy check
-- **Claude + Anthropic API** → duplication check
-
-## Deploy to Vercel
+1. Push to `main`.
+2. Add production environment variables in Vercel.
+3. Run the default Vercel build command:
 
 ```bash
-vercel --prod
+npm run build
 ```
 
-Set all environment variables in the Vercel dashboard under Project Settings → Environment Variables.
+Important production variables:
+
+```text
+NEXT_PUBLIC_SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+NEXT_PUBLIC_APP_URL
+```
 
 ## License
 

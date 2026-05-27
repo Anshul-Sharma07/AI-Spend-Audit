@@ -37,7 +37,6 @@ export default async function AuditResultsPage({ params }: Props) {
           aiSummary={aiSummary}
           formData={formData}
           shareUrl={shareUrl}
-          auditId={id}
         />
         <LeadCaptureForm auditId={id} totalMonthlySavings={totalMonthlySavings} />
       </div>
