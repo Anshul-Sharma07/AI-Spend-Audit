@@ -163,4 +163,15 @@ NEXT_PUBLIC_APP_URL
 
 ## License
 
-MIT
+This project is licensed under the [MIT License](LICENSE). You are free to use, modify, and distribute it with attribution.
+
+---
+
+## Contact
+
+**Author**: Anshul Sharma
+GitHub: [@Anshul-Sharma07](https://github.com/Anshul-Sharma07)  
+Email: anshulsharma2818@gmail.com
+
+For suggestions, improvements, or issues, feel free to open a [GitHub Issue](https://github.com/Anshul-Sharma07/multi-pdf-qa-chatbot/issues).
+
