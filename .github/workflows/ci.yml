@@ -1,16 +1,22 @@
-# .github/workflows/ci.yml
 name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
   ci:
-    name: Lint · Test · Build
+    name: Lint, Test, Build
     runs-on: ubuntu-latest
+
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
+      ANTHROPIC_API_KEY: placeholder-anthropic-key
+      RESEND_API_KEY: placeholder-resend-key
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
 
     steps:
       - name: Checkout
@@ -19,32 +25,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: 20
+          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Lint
         run: npm run lint
 
       - name: Test
-        run: npm run test
-        env:
-          # Tests don't hit external services, but vitest needs these defined
-          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
-          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
-          ANTHROPIC_API_KEY: placeholder-api-key
-          RESEND_API_KEY: placeholder-resend-key
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
+        run: npm test
 
       - name: Build
         run: npm run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
-          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
-          ANTHROPIC_API_KEY: placeholder-api-key
-          RESEND_API_KEY: placeholder-resend-key
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
